@@ -71,7 +71,7 @@ public class VerifierTest {
 
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
-		//GlobalsForTesting.reset("testSupport/JustFatals.log4j.xml");
+		//System.setProperty("log4j.configurationFile","src/test/resources/JustFatals.log4j.xml");
 		System.setProperty("log4j.configurationFile","src/test/resources/Everything.log4j.xml");
 		
 		Security.addProvider(new BouncyCastleJsseProvider());		

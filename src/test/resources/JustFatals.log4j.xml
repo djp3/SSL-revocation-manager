@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  Report configuration errors at the level of WARN -->
+<Configuration status="WARN" strict="true" name="ssl-revocation-manager log4j test configuration" monitorInterval="30">
+	<Appenders>
+		<!-- output for the console -->	
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%-5level %date{COMPACT} %d{HH:mm:ss.SSS} [%t%logger{.}] %location &quot;%msg&quot; %ex%n"/>
+		</Console>
+		
+		<!-- output for a rolling file -->	
+		<RollingRandomAccessFile name="RollingRandomAccessFile" fileName="ssl-revocation-manager.test.log4j.log" filePattern="logs/$${date:yyyy-MM}/GlobalsTest-%d{MM-dd-yyyy}-%i.log.gz" immediateFlush="false">
+			<PatternLayout>
+				<Pattern>%-5level %date{COMPACT} %d{HH:mm:ss.SSS} [%t%logger{.}] %location &quot;%msg&quot; %ex%n"</Pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy></TimeBasedTriggeringPolicy>
+				<SizeBasedTriggeringPolicy size="250 MB"></SizeBasedTriggeringPolicy>
+			</Policies>
+			<DefaultRolloverStrategy max="10" />
+		</RollingRandomAccessFile>
+	</Appenders>
+	<Loggers>
+		<AsyncLogger name="net.djp3.Verifier" level="FATAL" includeLocation="true" additivity="false">
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="RollingRandomAccessFile" />
+		</AsyncLogger>
+		<!-- Default is to show everything -->
+		<Root level="FATAL" includeLocation="true">
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="RollingRandomAccessFile" />
+		</Root>
+	</Loggers>
+</Configuration>
