@@ -137,7 +137,8 @@ public class VerifierTest {
 	
 	
 	@Test
-	/** Degenerate conditions
+	/**
+	 *  Degenerate conditions
 	 */
 	public void test00(){
 		/******* CT ******/
@@ -177,7 +178,7 @@ public class VerifierTest {
 		}catch(NullPointerException e) {
 			//okay
 		}
-		ctVerifier.getCache().put(BigInteger.TEN, new RevocationStatus(RevocationStatus.UNKNOWN,null)); //null date should get cleaned up
+		ctVerifier.getCache().put(BigInteger.TEN, new VerificationStatus(VerificationStatus.BAD,null)); //null date should get cleaned up
 		assertEquals(1,ctVerifier.getCache().size());
 		ctVerifier.triggerGarbageCollection();
 		assertEquals(0,ctVerifier.getCache().size());
@@ -217,7 +218,7 @@ public class VerifierTest {
 		}catch(NullPointerException e) {
 			//okay
 		}
-		ocspVerifier.getCache().put(BigInteger.TEN, new RevocationStatus(RevocationStatus.UNKNOWN,null)); //null date should get cleaned up
+		ocspVerifier.getCache().put(BigInteger.TEN, new VerificationStatus(VerificationStatus.BAD,null)); //null date should get cleaned up
 		assertEquals(1,ocspVerifier.getCache().size());
 		ocspVerifier.triggerGarbageCollection();
 		assertEquals(0,ocspVerifier.getCache().size());
@@ -1684,20 +1685,20 @@ public class VerifierTest {
 					throw new CertificateVerificationException("Certificates do not chain");
 				}
        		
-				RevocationStatus ocsp_status = null;
+				VerificationStatus ocsp_status = null;
        		
 				//First check with OCSP protocol
 				if(ocspVerifier != null) {
 					try {
 						ocsp_status = ocspVerifier.checkRevocationStatus(cert, issuer,chain);
-						if(ocsp_status.getStatus() == RevocationStatus.REVOKED) {
+						if(ocsp_status.getStatus() == VerificationStatus.BAD) {
 							throw new CertificateVerificationException("Certificate revoked by OCSP on "+SimpleDateFormat.getInstance().format(ocsp_status.getRevokeDate()));
 						}
 					}catch(CertificateVerificationException e) {
 						if(ocsp_status == null) {
-							ocsp_status = new RevocationStatus(RevocationStatus.UNKNOWN,cert.getNotAfter());
+							ocsp_status = new VerificationStatus(VerificationStatus.BAD,cert.getNotAfter());
 						}
-						else if (ocsp_status.getStatus() == RevocationStatus.REVOKED) {
+						else if (ocsp_status.getStatus() == VerificationStatus.BAD) {
 							throw e;
 						}
 					}
@@ -1706,11 +1707,11 @@ public class VerifierTest {
 				//If needed, check with CRL protocol
 				if(crlVerifier != null) {
 					//Then check with CRL protocol
-					RevocationStatus crl_status = null;
+					VerificationStatus crl_status = null;
 					//If we passed OCSP then check with CRL protocol
-					if((ocsp_status == null) || (ocsp_status.getStatus() == RevocationStatus.GOOD) || (ocsp_status.getStatus() == RevocationStatus.UNKNOWN)) {
+					if((ocsp_status == null) || (ocsp_status.getStatus() == VerificationStatus.GOOD)) {
 						crl_status = crlVerifier.checkRevocationStatus(cert, issuer,chain);
-						if(crl_status.getStatus() == RevocationStatus.REVOKED) {
+						if(crl_status.getStatus() == VerificationStatus.BAD) {
 							throw new CertificateVerificationException("Certificate revoked by CRL on "+SimpleDateFormat.getInstance().format(crl_status.getRevokeDate()));
 						}
 					}
@@ -1720,11 +1721,11 @@ public class VerifierTest {
 					//Check with Certificate Transparency protocol
 					if(ctVerifier != null) {
 						//Then check with CRL protocol
-						RevocationStatus ct_status = null;
+						VerificationStatus ct_status = null;
 						//System.out.print("Checking the status of :"+cert.getSerialNumber());
 						ct_status = ctVerifier.checkRevocationStatus(cert,chain);
 						//System.out.println("\t"+ct_status.getStatus());
-						if((ct_status.getStatus() == RevocationStatus.REVOKED) || (ct_status.getStatus() == RevocationStatus.UNKNOWN)) {
+						if(ct_status.getStatus() == VerificationStatus.BAD) {
 							throw new CertificateVerificationException("Certificate not supported by CT (Certificate Transparency) ");
 						}
 					}

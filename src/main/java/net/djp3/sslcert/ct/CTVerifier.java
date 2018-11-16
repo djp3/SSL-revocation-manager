@@ -59,7 +59,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheStats;
 
 import net.djp3.sslcert.CertificateVerificationException;
-import net.djp3.sslcert.RevocationStatus;
+import net.djp3.sslcert.VerificationStatus;
 import net.djp3.sslcert.Verifier;
 
 /**
@@ -90,7 +90,7 @@ import net.djp3.sslcert.Verifier;
  *
  */
 
-public class CTVerifier extends Verifier<BigInteger, RevocationStatus> {
+public class CTVerifier extends Verifier<BigInteger, VerificationStatus> {
 
 	
 	private static transient volatile Logger log = null;
@@ -163,7 +163,7 @@ public class CTVerifier extends Verifier<BigInteger, RevocationStatus> {
 		return new Runnable() {
 			@Override
 			public void run() {
-				Cache<BigInteger, RevocationStatus> cache = getCache();
+				Cache<BigInteger, VerificationStatus> cache = getCache();
 				if (config.useCache && (cache != null)) {
 					StringBuffer info = new StringBuffer();
 					info.append("\nRunning validity check on CT Cache\n");
@@ -175,8 +175,8 @@ public class CTVerifier extends Verifier<BigInteger, RevocationStatus> {
 					"\tLoad Exception Count: "+stats.loadExceptionCount()+"\n"+
 					"\t       Request Count: "+stats.requestCount()+"\n");
 					Date now = new Date();
-					for (Entry<BigInteger, RevocationStatus> x : cache.asMap().entrySet()) {
-						RevocationStatus resp = x.getValue();
+					for (Entry<BigInteger, VerificationStatus> x : cache.asMap().entrySet()) {
+						VerificationStatus resp = x.getValue();
 						Date nextUpdate = resp.getNextUpdate();
 						if ((nextUpdate == null) || (nextUpdate.before(now))) {
 							cache.invalidate(x.getKey());
@@ -190,20 +190,18 @@ public class CTVerifier extends Verifier<BigInteger, RevocationStatus> {
 	}
 	
 
-	private RevocationStatus getCTValidationDirect(X509Certificate certificate,X509Certificate[] chain)
-			throws CertificateVerificationException {
-		
+	private VerificationStatus getCTValidationDirect(X509Certificate certificate,X509Certificate[] chain) throws CertificateVerificationException {
 		
 		if (!CertificateInfo.hasEmbeddedSCT(certificate)) {
 			getLog().info("  This certificate does not have any Signed Certificate Timestamps in it.");
-			return new RevocationStatus(RevocationStatus.UNKNOWN,certificate.getNotAfter());
+			return new VerificationStatus(VerificationStatus.BAD,certificate.getNotAfter());
 		}
 		
 		try {
 			List<Ct.SignedCertificateTimestamp> sctsInCertificate = VerifySignature.parseSCTsFromCert(certificate);
 			if (sctsInCertificate.size() < MIN_VALID_SCTS) {
 				getLog().info("Too few SCTs are present, I want at least "+MIN_VALID_SCTS+" CT logs to vouch for this certificate.");
-				return new RevocationStatus(RevocationStatus.UNKNOWN,certificate.getNotAfter());
+				return new VerificationStatus(VerificationStatus.BAD,certificate.getNotAfter());
 			}
 		
 			List<Certificate> certificateList = Arrays.asList(chain);
@@ -224,15 +222,15 @@ public class CTVerifier extends Verifier<BigInteger, RevocationStatus> {
 		
 			if (validSctCount < MIN_VALID_SCTS) {
 				getLog().info("Too few SCTs are present, I want at least "+ MIN_VALID_SCTS + " CT logs to vouch for this certificate.");
-				return new RevocationStatus(RevocationStatus.REVOKED,certificate.getNotAfter());
+				return new VerificationStatus(VerificationStatus.BAD,certificate.getNotAfter());
 			}
 			else {
-				return new RevocationStatus(RevocationStatus.GOOD,certificate.getNotAfter());
+				return new VerificationStatus(VerificationStatus.GOOD,certificate.getNotAfter());
 			}
-		}catch(IOException e) {
+		} catch(IOException e) {
+			/* Could not parse the embedded information in the certificate */
 			getLog().warn(e.getLocalizedMessage());
-			return new RevocationStatus(RevocationStatus.UNKNOWN,certificate.getNotAfter());
-			
+			return new VerificationStatus(VerificationStatus.BAD,certificate.getNotAfter());
 		}
 	}
 	
@@ -246,7 +244,7 @@ public class CTVerifier extends Verifier<BigInteger, RevocationStatus> {
 	 * @throws CertificateVerificationException
 	 *
 	 */
-	public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, X509Certificate[] fullChain)
+	public VerificationStatus checkRevocationStatus(final X509Certificate peerCert, X509Certificate[] fullChain)
 			throws CertificateVerificationException {
 		return checkRevocationStatus(peerCert,null,fullChain);
 	}
@@ -264,17 +262,17 @@ public class CTVerifier extends Verifier<BigInteger, RevocationStatus> {
 	 *
 	 */
 	@Override
-	public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert, X509Certificate[] fullchain)
+	public VerificationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert, X509Certificate[] fullchain)
 			throws CertificateVerificationException {
 
-		RevocationStatus status;
+		VerificationStatus status;
 
 		// check cache
-		Cache<BigInteger, RevocationStatus> cache = getCache();
+		Cache<BigInteger, VerificationStatus> cache = getCache();
 		if (config.useCache && (cache != null)) {
 			try {
-				status = cache.get(peerCert.getSerialNumber(), new Callable<RevocationStatus>() {
-					public RevocationStatus call() throws CertificateVerificationException {
+				status = cache.get(peerCert.getSerialNumber(), new Callable<VerificationStatus>() {
+					public VerificationStatus call() throws CertificateVerificationException {
 						getLog().debug("Cache miss ");
 						return getCTValidationDirect(peerCert, fullchain);
 					}

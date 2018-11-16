@@ -28,45 +28,42 @@ import org.bouncycastle.cert.ocsp.CertificateStatus;
 import org.bouncycastle.cert.ocsp.RevokedStatus;
 import org.bouncycastle.cert.ocsp.SingleResp;
 
-public class RevocationStatus implements Serializable{
-
+public class VerificationStatus implements Serializable{
+	
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 6110748765739524230L;
+	private static final long serialVersionUID = 1333379539806083746L;
 	
 	public static final int GOOD = 0;
-	public static final int UNKNOWN = 1;
-	public static final int REVOKED = 2;
+	public static final int BAD = 1; 
 	
-	private int status = UNKNOWN;
-	private Date revokeDate = null;
-	private Integer revokeReason = null;
+	private Integer status = null;
+	private Date verificationFailureDate = null; //The date after which the certificate becomes bad (if applicable)
+	private Integer verificationReason = null;
 	private Date nextUpdate = null;
 	
   
-    public RevocationStatus(SingleResp singleResp) throws CertificateVerificationException {
+    public VerificationStatus(SingleResp singleResp) throws CertificateVerificationException {
     	setNextUpdate(singleResp.getNextUpdate());
     	
     	CertificateStatus certStatus = singleResp.getCertStatus();
    		if (certStatus == null) {
    			setStatus(GOOD);
    		} else if (certStatus instanceof org.bouncycastle.cert.ocsp.RevokedStatus) {
-   			setStatus(REVOKED);
+   			setStatus(BAD);
    			RevokedStatus revokeStatus = (org.bouncycastle.cert.ocsp.RevokedStatus) certStatus;
    			setRevokeDate(revokeStatus.getRevocationTime());
    			if(revokeStatus.hasRevocationReason()) {
    				setRevokeReason(revokeStatus.getRevocationReason());
    			}
-   		} else if (certStatus instanceof org.bouncycastle.cert.ocsp.UnknownStatus) {
-   			setStatus(UNKNOWN);
    		}
    		else {
     		throw new CertificateVerificationException("Cant recognize Certificate Status");
     	}
 	}
 
-	public RevocationStatus(int status,Date nextUpdate) {
+	public VerificationStatus(int status,Date nextUpdate) {
     	setStatus(status);
     	setNextUpdate(nextUpdate);
     }
@@ -81,19 +78,19 @@ public class RevocationStatus implements Serializable{
     }
     
     public void setRevokeDate(Date revokeDate) {
-    	this.revokeDate = revokeDate; 
+    	this.verificationFailureDate = revokeDate; 
     }
     
     public Date getRevokeDate() {
-    	return revokeDate;
+    	return verificationFailureDate;
     }
     
     public void setRevokeReason(Integer reason) {
-    	this.revokeReason = reason; 
+    	this.verificationReason = reason; 
     }
     
     public Integer getRevokeReason() {
-    	return revokeReason;
+    	return verificationReason;
     }
     
     public Date getNextUpdate() {

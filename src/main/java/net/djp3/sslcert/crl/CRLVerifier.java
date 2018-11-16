@@ -56,7 +56,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheStats;
 
 import net.djp3.sslcert.CertificateVerificationException;
-import net.djp3.sslcert.RevocationStatus;
+import net.djp3.sslcert.VerificationStatus;
 import net.djp3.sslcert.Verifier;
 
 /**
@@ -141,7 +141,7 @@ public class CRLVerifier extends Verifier<String,X509CRLWrapper>{
      * @throws CertificateVerificationException
      *
      */
-	public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert,final X509Certificate[] fullChain)
+	public VerificationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert,final X509Certificate[] fullChain)
 			throws CertificateVerificationException {
     	
         List<String> list = getCrlDistributionPoints(peerCert);
@@ -170,24 +170,25 @@ public class CRLVerifier extends Verifier<String,X509CRLWrapper>{
         		return getRevocationStatus(x509CRLWrapper.getX509CRL(), peerCert,fullChain);
         	}
         }
-        return new RevocationStatus(RevocationStatus.UNKNOWN,peerCert.getNotAfter());
-        //throw new CertificateVerificationException("Cannot check revocation status with the certificate");
+        throw new CertificateVerificationException("Cannot check revocation status with the certificate");
     }
 	
 
-    private RevocationStatus getRevocationStatus(X509CRL x509CRL, X509Certificate peerCert,X509Certificate[] fullChain) {
+    private VerificationStatus getRevocationStatus(X509CRL x509CRL, X509Certificate peerCert,X509Certificate[] fullChain) {
+    	if(x509CRL == null) {
+    		throw new InvalidParameterException("Can't check revocation status of null");
+    	}
+    	
     	if(peerCert == null) {
     		throw new InvalidParameterException("Can't check revocation status of null");
     	}
     	
-    	if(x509CRL == null) {
-            return new RevocationStatus(RevocationStatus.UNKNOWN,peerCert.getNotAfter());
-    	} else if (x509CRL.isRevoked(peerCert)) {
-            RevocationStatus ret = new RevocationStatus(RevocationStatus.REVOKED,peerCert.getNotAfter());
+    	if (x509CRL.isRevoked(peerCert)) {
+            VerificationStatus ret = new VerificationStatus(VerificationStatus.BAD,peerCert.getNotAfter());
             ret.setRevokeDate(x509CRL.getRevokedCertificate(peerCert).getRevocationDate());
             return ret;
         } else {
-            return new RevocationStatus(RevocationStatus.GOOD,peerCert.getNotAfter());
+            return new VerificationStatus(VerificationStatus.GOOD,peerCert.getNotAfter());
         }
     }
     

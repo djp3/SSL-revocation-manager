@@ -72,7 +72,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheStats;
 
 import net.djp3.sslcert.CertificateVerificationException;
-import net.djp3.sslcert.RevocationStatus;
+import net.djp3.sslcert.VerificationStatus;
 import net.djp3.sslcert.Verifier;
 
 /**
@@ -80,7 +80,7 @@ import net.djp3.sslcert.Verifier;
  * using the Online CertificateStatus Protocol (OCSP).
  */
 
-public class OCSPVerifier extends Verifier<BigInteger, RevocationStatus> {
+public class OCSPVerifier extends Verifier<BigInteger, VerificationStatus> {
 
 	
 	private static transient volatile Logger log = null;
@@ -106,7 +106,7 @@ public class OCSPVerifier extends Verifier<BigInteger, RevocationStatus> {
 		return new Runnable() {
 			@Override
 			public void run() {
-				Cache<BigInteger, RevocationStatus> cache = getCache();
+				Cache<BigInteger, VerificationStatus> cache = getCache();
 				if (config.useCache && (cache != null)) {
 					getLog().info("Running validity check on OCSP Cache");
 					CacheStats stats = cache.stats();
@@ -116,8 +116,8 @@ public class OCSPVerifier extends Verifier<BigInteger, RevocationStatus> {
 					"\tLoad Exception Count: "+stats.loadExceptionCount()+"\n"+
 					"\t       Request Count: "+stats.requestCount());
 					Date now = new Date();
-					for (Entry<BigInteger, RevocationStatus> x : cache.asMap().entrySet()) {
-						RevocationStatus resp = x.getValue();
+					for (Entry<BigInteger, VerificationStatus> x : cache.asMap().entrySet()) {
+						VerificationStatus resp = x.getValue();
 						Date nextUpdate = resp.getNextUpdate();
 						if ((nextUpdate == null) || (nextUpdate.before(now))) {
 							cache.invalidate(x.getKey());
@@ -235,7 +235,7 @@ public class OCSPVerifier extends Verifier<BigInteger, RevocationStatus> {
 	}
 	
 
-	private RevocationStatus getOCSPResponseDirect(X509Certificate peerCert, X509Certificate issuerCert)
+	private VerificationStatus getOCSPResponseDirect(X509Certificate peerCert, X509Certificate issuerCert)
 			throws CertificateVerificationException {
 
 		OCSPReq request = generateOCSPRequest(issuerCert, peerCert.getSerialNumber());
@@ -262,7 +262,7 @@ public class OCSPVerifier extends Verifier<BigInteger, RevocationStatus> {
 
 			SingleResp[] responses = (basicResponse == null) ? null : basicResponse.getResponses();
 			if (responses != null && responses.length == 1) {
-				RevocationStatus resp = new RevocationStatus(responses[0]);
+				VerificationStatus resp = new VerificationStatus(responses[0]);
 				return resp;
 			}
 		}
@@ -283,17 +283,17 @@ public class OCSPVerifier extends Verifier<BigInteger, RevocationStatus> {
 	 * @throws ExecutionException
 	 *
 	 */
-	public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert,final X509Certificate[] fullChain)
+	public VerificationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert,final X509Certificate[] fullChain)
 			throws CertificateVerificationException {
 
-		RevocationStatus status;
+		VerificationStatus status;
 
 		// check cache
-		Cache<BigInteger, RevocationStatus> cache = getCache();
+		Cache<BigInteger, VerificationStatus> cache = getCache();
 		if (config.useCache && (cache != null)) {
 			try {
-				status = cache.get(peerCert.getSerialNumber(), new Callable<RevocationStatus>() {
-					public RevocationStatus call() throws CertificateVerificationException {
+				status = cache.get(peerCert.getSerialNumber(), new Callable<VerificationStatus>() {
+					public VerificationStatus call() throws CertificateVerificationException {
 						return getOCSPResponseDirect(peerCert, issuerCert);
 					}
 				});

@@ -223,7 +223,7 @@ public abstract class Verifier<K extends Serializable,V extends Serializable> {
 	 * @throws ExecutionException
 	 *
 	 */
-	abstract public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert,final X509Certificate[] fullChain)
+	abstract public VerificationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert,final X509Certificate[] fullChain)
 			throws CertificateVerificationException, ExecutionException; 
 	
 
