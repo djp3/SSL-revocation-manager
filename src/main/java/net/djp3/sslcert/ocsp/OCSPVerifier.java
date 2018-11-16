@@ -118,13 +118,9 @@ public class OCSPVerifier extends Verifier<BigInteger, RevocationStatus> {
 					Date now = new Date();
 					for (Entry<BigInteger, RevocationStatus> x : cache.asMap().entrySet()) {
 						RevocationStatus resp = x.getValue();
-						if (resp == null) {
+						Date nextUpdate = resp.getNextUpdate();
+						if ((nextUpdate == null) || (nextUpdate.before(now))) {
 							cache.invalidate(x.getKey());
-						} else {
-							Date nextUpdate = resp.getNextUpdate();
-							if ((nextUpdate == null) || (nextUpdate.before(now))) {
-								cache.invalidate(x.getKey());
-							}
 						}
 					}
 				}
@@ -287,10 +283,10 @@ public class OCSPVerifier extends Verifier<BigInteger, RevocationStatus> {
 	 * @throws ExecutionException
 	 *
 	 */
-	public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert)
+	public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert,final X509Certificate[] fullChain)
 			throws CertificateVerificationException {
 
-		RevocationStatus status = null;
+		RevocationStatus status;
 
 		// check cache
 		Cache<BigInteger, RevocationStatus> cache = getCache();
@@ -306,10 +302,6 @@ public class OCSPVerifier extends Verifier<BigInteger, RevocationStatus> {
 			}
 		} else {
 			status = getOCSPResponseDirect(peerCert, issuerCert);
-		}
-
-		if (status == null) {
-			status = new RevocationStatus(RevocationStatus.UNKNOWN);
 		}
 
 		return status;

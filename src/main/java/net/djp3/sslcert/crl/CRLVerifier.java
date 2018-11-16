@@ -141,7 +141,7 @@ public class CRLVerifier extends Verifier<String,X509CRLWrapper>{
      * @throws CertificateVerificationException
      *
      */
-	public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert)
+	public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert,final X509Certificate[] fullChain)
 			throws CertificateVerificationException {
     	
         List<String> list = getCrlDistributionPoints(peerCert);
@@ -167,26 +167,27 @@ public class CRLVerifier extends Verifier<String,X509CRLWrapper>{
             	getLog().debug("Either the url is bad or cannot build X509CRL. Check with the next url in the list.", e);
 			}
         	if (x509CRLWrapper.getX509CRL() != null) {
-        		return getRevocationStatus(x509CRLWrapper.getX509CRL(), peerCert);
+        		return getRevocationStatus(x509CRLWrapper.getX509CRL(), peerCert,fullChain);
         	}
         }
-        throw new CertificateVerificationException("Cannot check revocation status with the certificate");
+        return new RevocationStatus(RevocationStatus.UNKNOWN,peerCert.getNotAfter());
+        //throw new CertificateVerificationException("Cannot check revocation status with the certificate");
     }
 	
 
-    private RevocationStatus getRevocationStatus(X509CRL x509CRL, X509Certificate peerCert) {
+    private RevocationStatus getRevocationStatus(X509CRL x509CRL, X509Certificate peerCert,X509Certificate[] fullChain) {
     	if(peerCert == null) {
     		throw new InvalidParameterException("Can't check revocation status of null");
     	}
     	
     	if(x509CRL == null) {
-            return new RevocationStatus(RevocationStatus.UNKNOWN);
+            return new RevocationStatus(RevocationStatus.UNKNOWN,peerCert.getNotAfter());
     	} else if (x509CRL.isRevoked(peerCert)) {
-            RevocationStatus ret = new RevocationStatus(RevocationStatus.REVOKED);
+            RevocationStatus ret = new RevocationStatus(RevocationStatus.REVOKED,peerCert.getNotAfter());
             ret.setRevokeDate(x509CRL.getRevokedCertificate(peerCert).getRevocationDate());
             return ret;
         } else {
-            return new RevocationStatus(RevocationStatus.GOOD);
+            return new RevocationStatus(RevocationStatus.GOOD,peerCert.getNotAfter());
         }
     }
     
@@ -221,10 +222,12 @@ public class CRLVerifier extends Verifier<String,X509CRLWrapper>{
     private List<String> getCrlDistributionPoints(X509Certificate cert)
             throws CertificateVerificationException {
 
+       	List<String> crlUrls = new ArrayList<String>();
         //Gets the DER-encoded OCTET string for the extension value for CRLDistributionPoints
         byte[] crlDPExtensionValue = cert.getExtensionValue(Extension.cRLDistributionPoints.getId());
         if (crlDPExtensionValue == null) {
-            throw new CertificateVerificationException("Certificate doesn't have CRL distribution points");
+        	return crlUrls;
+            //throw new CertificateVerificationException("Certificate doesn't have CRL distribution points");
         }
         //crlDPExtensionValue is encoded in ASN.1 format.
         ASN1InputStream asn1In = null;
@@ -254,7 +257,6 @@ public class CRLVerifier extends Verifier<String,X509CRLWrapper>{
         		}
         	}
         		
-        	List<String> crlUrls = new ArrayList<String>();
         	//Loop through ASN1Encodable DistributionPoints
         	for (DistributionPoint dp : distPoint.getDistributionPoints()) {
         		//get ASN1Encodable DistributionPointName

@@ -106,13 +106,17 @@ public abstract class Verifier<K extends Serializable,V extends Serializable> {
 		return cache;
 	}
 	
+	private void setCache(Cache<K,V> newCache) {
+		this.cache = newCache;
+	}
+	
 	@SuppressWarnings("unchecked")
 	private void loadCache() {
 		try {
 			try (FileInputStream fis = new FileInputStream(config.loadCacheColdStorageFileName)) {
 				try (ObjectInputStream ois = new ObjectInputStream(fis)) {
 					Map<? extends K, ? extends V> cacheLoad = (Map<? extends K, ? extends V>) ois.readObject();
-					cache.putAll(cacheLoad);
+					getCache().putAll(cacheLoad);
 				}
 			}
 		} catch (FileNotFoundException e) {
@@ -128,7 +132,7 @@ public abstract class Verifier<K extends Serializable,V extends Serializable> {
 	protected void saveCache() throws FileNotFoundException, IOException {
 		try (FileOutputStream fos = new FileOutputStream(config.storeCacheColdStorageFileName)) {
 			try (ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-				HashMap<K, V> hashMap = new HashMap<K,V>(cache.asMap());
+				HashMap<K, V> hashMap = new HashMap<K,V>(getCache().asMap());
 				oos.writeObject(hashMap);
 			}
 		}
@@ -136,7 +140,7 @@ public abstract class Verifier<K extends Serializable,V extends Serializable> {
 	}
 	 
     public synchronized void shutdown() throws FileNotFoundException, IOException {
-    	if(config.useCache && (cache != null)) {
+    	if(config.useCache && (getCache() != null)) {
     		if(validityCheckerHandle != null) {
     			validityCheckerHandle.cancel(false);
     		}
@@ -148,7 +152,7 @@ public abstract class Verifier<K extends Serializable,V extends Serializable> {
     }
     
     public void resetCache() {
-    	if(cache != null) {
+    	if(getCache() != null) {
     		try {
 				shutdown();
 			} catch (FileNotFoundException e) {
@@ -157,7 +161,7 @@ public abstract class Verifier<K extends Serializable,V extends Serializable> {
 				getLog().error("Unable to store SSL Verifier cache:"+config.storeCacheColdStorageFileName+"\n"+e);
 			}
     		finally {
-    			cache = null;
+    			setCache(null);
     		}
     	}
     	cacheStatsBaseline = null;
@@ -170,7 +174,7 @@ public abstract class Verifier<K extends Serializable,V extends Serializable> {
     		if(config.trackCacheStats) {
     			cacheBuilder.recordStats();
     		}
-    		cache = cacheBuilder.build();
+    		setCache(cacheBuilder.build());
 		
     		//Load the cache from disk
     		if(config.loadCacheFromColdStorageOnStart && (config.loadCacheColdStorageFileName != null)) {
@@ -183,20 +187,20 @@ public abstract class Verifier<K extends Serializable,V extends Serializable> {
     		//Launch cleaner immediately to deal with possible stale data in the cold loaded file, then periodically
     		validityCheckerHandle = scheduler.scheduleAtFixedRate(getValidityCheckerCode(), 0, config.duration, config.timeUnit);
     		
-    		cacheStatsBaseline = cache.stats();
+    		cacheStatsBaseline = getCache().stats();
     	}
     }
     
     public CacheStats getCacheStats() {
-    	if(config.useCache && (cache != null)) {
-    		CacheStats stats = cache.stats().minus(cacheStatsBaseline);
+    	if(config.useCache && (getCache() != null)) {
+    		CacheStats stats = getCache().stats().minus(cacheStatsBaseline);
     		return stats;
     	}
     	return null;
     }
     
     public void triggerGarbageCollection() {
-    	if(config.useCache && (cache != null)) {
+    	if(config.useCache && (getCache() != null)) {
     		Runnable code = getValidityCheckerCode();
     		Thread t = new Thread(code);
     		t.setDaemon(false);
@@ -219,7 +223,7 @@ public abstract class Verifier<K extends Serializable,V extends Serializable> {
 	 * @throws ExecutionException
 	 *
 	 */
-	abstract public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert)
+	abstract public RevocationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert,final X509Certificate[] fullChain)
 			throws CertificateVerificationException, ExecutionException; 
 	
 

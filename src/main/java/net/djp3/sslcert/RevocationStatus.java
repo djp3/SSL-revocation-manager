@@ -66,8 +66,9 @@ public class RevocationStatus implements Serializable{
     	}
 	}
 
-	public RevocationStatus(int status) {
+	public RevocationStatus(int status,Date nextUpdate) {
     	setStatus(status);
+    	setNextUpdate(nextUpdate);
     }
     
 
