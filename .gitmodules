@@ -1,0 +1,3 @@
+[submodule "submodules/certificate-transparency-java"]
+	path = submodules/certificate-transparency-java
+	url = https://github.com/google/certificate-transparency-java.git
