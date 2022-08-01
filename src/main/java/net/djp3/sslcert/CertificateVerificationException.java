@@ -1,6 +1,6 @@
 /*
 	Copyright 2007-2018
-		Donald J. Patterson 
+		Donald J. Patterson
 */
 /*
 	This file is part of SSL Revocation Manager , i.e. "SSLRM"
@@ -19,26 +19,23 @@
     along with SSLRM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 package net.djp3.sslcert;
 
 import java.security.cert.CertificateException;
 
 public class CertificateVerificationException extends CertificateException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -8725765076032198731L;
+  /** */
+  private static final long serialVersionUID = -8725765076032198731L;
 
-	public CertificateVerificationException(String message) {
-        super(message);
-    }
+  public CertificateVerificationException(String message) {
+    super(message);
+  }
 
-    public CertificateVerificationException(Throwable throwable) {
-        super(throwable);
-    }
+  public CertificateVerificationException(Throwable throwable) {
+    super(throwable);
+  }
 
-    public CertificateVerificationException(String message, Throwable throwable) {
-        super(message, throwable);
-    }
+  public CertificateVerificationException(String message, Throwable throwable) {
+    super(message, throwable);
+  }
 }

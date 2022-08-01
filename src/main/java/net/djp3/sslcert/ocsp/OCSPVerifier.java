@@ -1,6 +1,6 @@
 /*
 	Copyright 2007-2018
-		Donald J. Patterson 
+		Donald J. Patterson
 */
 /*
 	This file is part of SSL Revocation Manager , i.e. "SSLRM"
@@ -76,302 +76,328 @@ import net.djp3.sslcert.VerificationStatus;
 import net.djp3.sslcert.Verifier;
 
 /**
- * This is used to check if an SSL Certificate is revoked or not by using its CA
- * using the Online CertificateStatus Protocol (OCSP).
+ * This is used to check if an SSL Certificate is revoked or not by using its CA using the Online
+ * CertificateStatus Protocol (OCSP).
  */
-
 public class OCSPVerifier extends Verifier<BigInteger, VerificationStatus> {
 
-	
-	private static transient volatile Logger log = null;
-	public static Logger getLog() {
-		if (log == null) {
-			log = LogManager.getLogger(OCSPVerifier.class);
-		}
-		return log;
-	}
-	
-	
-	public OCSPVerifier(Configuration config) throws FileNotFoundException, ClassNotFoundException, IOException {
-    	super(config); 
+  private static transient volatile Logger log = null;
+
+  public static Logger getLog() {
+    if (log == null) {
+      log = LogManager.getLogger(OCSPVerifier.class);
     }
-    
-    
-    /**
-     * This is run periodically by the cache to clean out any cache entries that have expired:
-     * Not according to cache semantics but by virtue of the information associated with the
-     * revocation data.
-     */
-	protected Runnable getValidityCheckerCode() {
-		return new Runnable() {
-			@Override
-			public void run() {
-				Cache<BigInteger, VerificationStatus> cache = getCache();
-				if (config.useCache && (cache != null)) {
-					getLog().info("Running validity check on OCSP Cache");
-					CacheStats stats = cache.stats();
-					getLog().info("OCSP Cache stats:\n"+
-					"\tAverage Load Penalty: "+stats.averageLoadPenalty()+"\n"+
-					"\t            Hit Rate: "+stats.hitRate()+"\n"+
-					"\tLoad Exception Count: "+stats.loadExceptionCount()+"\n"+
-					"\t       Request Count: "+stats.requestCount());
-					Date now = new Date();
-					for (Entry<BigInteger, VerificationStatus> x : cache.asMap().entrySet()) {
-						VerificationStatus resp = x.getValue();
-						Date nextUpdate = resp.getNextUpdate();
-						if ((nextUpdate == null) || (nextUpdate.before(now))) {
-							cache.invalidate(x.getKey());
-						}
-					}
-				}
-			}
-		};
-	}
-	
+    return log;
+  }
 
-	/**
-	 * This method generates an OCSP Request to be sent to an OCSP endpoint.
-	 *
-	 * @param issuerCert
-	 *            is the Certificate of the Issuer of the peer certificate we are
-	 *            interested in.
-	 * @param serialNumber
-	 *            of the peer certificate.
-	 * @return generated OCSP request.
-	 * @throws CertificateVerificationException
-	 */
-	private OCSPReq generateOCSPRequest(X509Certificate issuerCert, BigInteger serialNumber)
-			throws CertificateVerificationException {
+  public OCSPVerifier(Configuration config)
+      throws FileNotFoundException, ClassNotFoundException, IOException {
+    super(config);
+  }
 
-		try {
-			JcaDigestCalculatorProviderBuilder digestCalculatorProviderBuilder = new JcaDigestCalculatorProviderBuilder();
-			DigestCalculatorProvider digestCalculatorProvider = digestCalculatorProviderBuilder.build();
-			DigestCalculator digestCalculator = digestCalculatorProvider.get(CertificateID.HASH_SHA1);
+  /**
+   * This is run periodically by the cache to clean out any cache entries that have expired: Not
+   * according to cache semantics but by virtue of the information associated with the revocation
+   * data.
+   */
+  protected Runnable getValidityCheckerCode() {
+    return new Runnable() {
+      @Override
+      public void run() {
+        Cache<BigInteger, VerificationStatus> cache = getCache();
+        if (config.useCache && (cache != null)) {
+          getLog().debug("Running validity check on OCSP Cache");
+          CacheStats stats = cache.stats();
+          getLog()
+              .debug(
+                  "OCSP Cache stats:\n"
+                      + "\tAverage Load Penalty: "
+                      + stats.averageLoadPenalty()
+                      + "\n"
+                      + "\t            Hit Rate: "
+                      + stats.hitRate()
+                      + "\n"
+                      + "\tLoad Exception Count: "
+                      + stats.loadExceptionCount()
+                      + "\n"
+                      + "\t       Request Count: "
+                      + stats.requestCount());
+          Date now = new Date();
+          for (Entry<BigInteger, VerificationStatus> x : cache.asMap().entrySet()) {
+            VerificationStatus resp = x.getValue();
+            Date nextUpdate = resp.getNextUpdate();
+            if ((nextUpdate == null) || (nextUpdate.before(now))) {
+              cache.invalidate(x.getKey());
+            }
+          }
+        }
+      }
+    };
+  }
 
-			// Generate the id for the certificate we are looking for
-			CertificateID id = new CertificateID(digestCalculator, new JcaX509CertificateHolder(issuerCert),
-					serialNumber);
+  /**
+   * This method generates an OCSP Request to be sent to an OCSP endpoint.
+   *
+   * @param issuerCert is the Certificate of the Issuer of the peer certificate we are interested
+   *     in.
+   * @param serialNumber of the peer certificate.
+   * @return generated OCSP request.
+   * @throws CertificateVerificationException
+   */
+  private OCSPReq generateOCSPRequest(X509Certificate issuerCert, BigInteger serialNumber)
+      throws CertificateVerificationException {
 
-			// basic request generation with nonce
-			OCSPReqBuilder builder = new OCSPReqBuilder();
+    try {
+      JcaDigestCalculatorProviderBuilder digestCalculatorProviderBuilder =
+          new JcaDigestCalculatorProviderBuilder();
+      DigestCalculatorProvider digestCalculatorProvider = digestCalculatorProviderBuilder.build();
+      DigestCalculator digestCalculator = digestCalculatorProvider.get(CertificateID.HASH_SHA1);
 
-			builder.addRequest(id);
+      // Generate the id for the certificate we are looking for
+      CertificateID id =
+          new CertificateID(
+              digestCalculator, new JcaX509CertificateHolder(issuerCert), serialNumber);
 
-			// create details for nonce extension. The nonce extension is used to bind
-			// a request to a response to prevent replay attacks. As the name implies,
-			// the nonce value is something that the client should only use once within a
-			// reasonably
-			// small period.
-			// create details for nonce extension
-			BigInteger nonce = BigInteger.valueOf(r.nextLong());
-			Extension ext = new Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, false,
-					new DEROctetString(nonce.toByteArray()).getEncoded());
-			builder.setRequestExtensions(new Extensions(new Extension[] { ext }));
+      // basic request generation with nonce
+      OCSPReqBuilder builder = new OCSPReqBuilder();
 
-			return builder.build();
-		} catch (OCSPException | OperatorCreationException | CertificateEncodingException | IOException e) {
-			throw new CertificateVerificationException("Cannot generate OCSP Request with the given certificate", e);
-		}
-	}
-	
+      builder.addRequest(id);
 
-	/**
-	 * Gets an ASN.1 encoded OCSP response (as defined in RFC 2560) from the given
-	 * service URL. Currently supports only HTTP.
-	 *
-	 * @param serviceUrl
-	 *            URL of the OCSP endpoint.
-	 * @param request
-	 *            an OCSP request object.
-	 * @return OCSP response encoded in ASN.1 structure.
-	 * @throws CertificateVerificationException
-	 *
-	 */
-	protected OCSPResp getOCSPResponse(String serviceUrl, OCSPReq request) throws CertificateVerificationException {
+      // create details for nonce extension. The nonce extension is used to bind
+      // a request to a response to prevent replay attacks. As the name implies,
+      // the nonce value is something that the client should only use once within a
+      // reasonably
+      // small period.
+      // create details for nonce extension
+      BigInteger nonce = BigInteger.valueOf(r.nextLong());
+      Extension ext =
+          new Extension(
+              OCSPObjectIdentifiers.id_pkix_ocsp_nonce,
+              false,
+              new DEROctetString(nonce.toByteArray()).getEncoded());
+      builder.setRequestExtensions(new Extensions(new Extension[] {ext}));
 
-		// Make sure we got good input
-		if ((serviceUrl == null) || (request == null)) {
-			throw new InvalidParameterException(
-					"Need non-null parameters: serviceUrl:\"" + serviceUrl + "\", request:\"" + request + "\"");
-		}
-		if (!serviceUrl.startsWith("http:")) {
-			throw new CertificateVerificationException("Only http: supported for serviceUrl:\"" + serviceUrl + "\"");
-		}
+      return builder.build();
+    } catch (OCSPException
+        | OperatorCreationException
+        | CertificateEncodingException
+        | IOException e) {
+      throw new CertificateVerificationException(
+          "Cannot generate OCSP Request with the given certificate", e);
+    }
+  }
 
-		// Build HTTP Post
-		URI uri;
-		try {
-			uri = new URI(serviceUrl);
-		} catch (URISyntaxException e) {
-			throw new CertificateVerificationException("Unable to parse serviceUrl:\"" + serviceUrl + "\"");
-		}
-		HttpPost httpPost = new HttpPost(uri);
-		httpPost.setHeader("Content-Type", "application/ocsp-request");
-		httpPost.setHeader("Accept", "application/ocsp-response");
-		ByteArrayEntity byteArrayEntity;
-		try {
-			byteArrayEntity = new ByteArrayEntity(request.getEncoded());
-		} catch (IOException e) {
-			throw new CertificateVerificationException("Unable to parse request:\"" + request + "\"\n" + e);
-		}
-		httpPost.setEntity(byteArrayEntity);
+  /**
+   * Gets an ASN.1 encoded OCSP response (as defined in RFC 2560) from the given service URL.
+   * Currently supports only HTTP.
+   *
+   * @param serviceUrl URL of the OCSP endpoint.
+   * @param request an OCSP request object.
+   * @return OCSP response encoded in ASN.1 structure.
+   * @throws CertificateVerificationException
+   */
+  protected OCSPResp getOCSPResponse(String serviceUrl, OCSPReq request)
+      throws CertificateVerificationException {
 
-		// Send request out
-		try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-			try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
-				// Evaluate response
-				int code = httpResponse.getStatusLine().getStatusCode();
-				// Check errors in response:
-				if (code / 100 != 2) {
-					throw new CertificateVerificationException("Error getting ocsp response. Response code is " + code + " to "+uri);
-				}
+    // Make sure we got good input
+    if ((serviceUrl == null) || (request == null)) {
+      throw new InvalidParameterException(
+          "Need non-null parameters: serviceUrl:\""
+              + serviceUrl
+              + "\", request:\""
+              + request
+              + "\"");
+    }
+    if (!serviceUrl.startsWith("http:")) {
+      throw new CertificateVerificationException(
+          "Only http: supported for serviceUrl:\"" + serviceUrl + "\"");
+    }
 
-				InputStream in = httpResponse.getEntity().getContent();
-				return new OCSPResp(in);
-			}
-		} catch (IOException e) {
-			throw new CertificateVerificationException("Unable to execute request:\"" + serviceUrl + "\"\n" + e);
-		}
-	}
-	
+    // Build HTTP Post
+    URI uri;
+    try {
+      uri = new URI(serviceUrl);
+    } catch (URISyntaxException e) {
+      throw new CertificateVerificationException(
+          "Unable to parse serviceUrl:\"" + serviceUrl + "\"");
+    }
+    HttpPost httpPost = new HttpPost(uri);
+    httpPost.setHeader("Content-Type", "application/ocsp-request");
+    httpPost.setHeader("Accept", "application/ocsp-response");
+    ByteArrayEntity byteArrayEntity;
+    try {
+      byteArrayEntity = new ByteArrayEntity(request.getEncoded());
+    } catch (IOException e) {
+      throw new CertificateVerificationException(
+          "Unable to parse request:\"" + request + "\"\n" + e);
+    }
+    httpPost.setEntity(byteArrayEntity);
 
-	private VerificationStatus getOCSPResponseDirect(X509Certificate peerCert, X509Certificate issuerCert)
-			throws CertificateVerificationException {
+    // Send request out
+    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+      try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
+        // Evaluate response
+        int code = httpResponse.getStatusLine().getStatusCode();
+        // Check errors in response:
+        if (code / 100 != 2) {
+          throw new CertificateVerificationException(
+              "Error getting ocsp response. Response code is " + code + " to " + uri);
+        }
 
-		OCSPReq request = generateOCSPRequest(issuerCert, peerCert.getSerialNumber());
+        InputStream in = httpResponse.getEntity().getContent();
+        return new OCSPResp(in);
+      }
+    } catch (IOException e) {
+      throw new CertificateVerificationException(
+          "Unable to execute request:\"" + serviceUrl + "\"\n" + e);
+    }
+  }
 
-		// This list will sometimes have non ocsp urls as well.
-		List<String> locations = getAIALocations(peerCert);
+  private VerificationStatus getOCSPResponseDirect(
+      X509Certificate peerCert, X509Certificate issuerCert)
+      throws CertificateVerificationException {
 
-		// Check each location
-		for (String serviceUrl : locations) {
+    OCSPReq request = generateOCSPRequest(issuerCert, peerCert.getSerialNumber());
 
-			OCSPResp ocspResponse = null;
-			ocspResponse = getOCSPResponse(serviceUrl, request); // Possibly cached
+    // This list will sometimes have non ocsp urls as well.
+    List<String> locations = null;
+    try {
+      locations = getAIALocations(peerCert);
+    } catch (CertificateVerificationException e) {
+      //Some kind of problem getting AIA Locations
+      getLog().info("Problem finding AIA Locations\n" + e);
+      return new VerificationStatus(VerificationStatus.BAD, new Date());
+    }
 
-			if (ocspResponse.getStatus() != OCSPResp.SUCCESSFUL) {
-				continue; // Server didn't provide a response so try the next one
-			}
+    // Check each location
+    for (String serviceUrl : locations) {
 
-			BasicOCSPResp basicResponse;
-			try {
-				basicResponse = (BasicOCSPResp) ocspResponse.getResponseObject();
-			} catch (OCSPException e) {
-				throw new CertificateVerificationException("Unable to execute OCSP request:\n" + e);
-			}
+      OCSPResp ocspResponse = null;
+      ocspResponse = getOCSPResponse(serviceUrl, request); // Possibly cached
 
-			SingleResp[] responses = (basicResponse == null) ? null : basicResponse.getResponses();
-			if (responses != null && responses.length == 1) {
-				VerificationStatus resp = new VerificationStatus(responses[0]);
-				return resp;
-			}
-		}
-		return null;
-	}
-	
+      if (ocspResponse.getStatus() != OCSPResp.SUCCESSFUL) {
+        continue; // Server didn't provide a response so try the next one
+      }
 
-	/**
-	 * Gets the revocation status of the given peer certificate. Uses the cache if
-	 * it has been configured
-	 *
-	 * @param peerCert
-	 *            The certificate we want to check if revoked.
-	 * @param issuerCert
-	 *            Needed to create OCSP request.
-	 * @return revocation status of the peer certificate.
-	 * @throws CertificateVerificationException
-	 * @throws ExecutionException
-	 *
-	 */
-	public VerificationStatus checkRevocationStatus(final X509Certificate peerCert, final X509Certificate issuerCert,final X509Certificate[] fullChain)
-			throws CertificateVerificationException {
+      BasicOCSPResp basicResponse;
+      try {
+        basicResponse = (BasicOCSPResp) ocspResponse.getResponseObject();
+      } catch (OCSPException e) {
+        throw new CertificateVerificationException("Unable to execute OCSP request:\n" + e);
+      }
 
-		VerificationStatus status;
+      SingleResp[] responses = (basicResponse == null) ? null : basicResponse.getResponses();
+      if (responses != null && responses.length == 1) {
+        VerificationStatus resp = new VerificationStatus(responses[0]);
+        return resp;
+      }
+    }
+    return null;
+  }
 
-		// check cache
-		Cache<BigInteger, VerificationStatus> cache = getCache();
-		if (config.useCache && (cache != null)) {
-			try {
-				status = cache.get(peerCert.getSerialNumber(), new Callable<VerificationStatus>() {
-					public VerificationStatus call() throws CertificateVerificationException {
-						return getOCSPResponseDirect(peerCert, issuerCert);
-					}
-				});
-			} catch (ExecutionException e) {
-				throw new CertificateVerificationException(e);
-			}
-		} else {
-			status = getOCSPResponseDirect(peerCert, issuerCert);
-		}
+  /**
+   * Gets the revocation status of the given peer certificate. Uses the cache if it has been
+   * configured
+   *
+   * @param peerCert The certificate we want to check if revoked.
+   * @param issuerCert Needed to create OCSP request.
+   * @return revocation status of the peer certificate.
+   * @throws CertificateVerificationException
+   * @throws ExecutionException
+   */
+  public VerificationStatus checkRevocationStatus(
+      final X509Certificate peerCert,
+      final X509Certificate issuerCert,
+      final X509Certificate[] fullChain)
+      throws CertificateVerificationException {
 
-		return status;
-	}
+    VerificationStatus status;
 
-	
-	
-	/**
-	 * Authority Information Access (AIA) is a non-critical extension in an X509
-	 * Certificate. This contains the URL of the OCSP endpoint if one is available.
-	 * TODO: This might contain non OCSP urls as well. Handle this.
-	 *
-	 * @param cert
-	 *            is the certificate
-	 * @return a lit of URLs in AIA extension of the certificate which will
-	 *         hopefully contain an OCSP endpoint.
-	 * @throws CertificateVerificationException
-	 *
-	 */
-	private List<String> getAIALocations(X509Certificate cert) throws CertificateVerificationException {
+    // check cache
+    Cache<BigInteger, VerificationStatus> cache = getCache();
+    if (config.useCache && (cache != null)) {
+      try {
+        status =
+            cache.get(
+                peerCert.getSerialNumber(),
+                new Callable<VerificationStatus>() {
+                  public VerificationStatus call() throws CertificateVerificationException {
+                    return getOCSPResponseDirect(peerCert, issuerCert);
+                  }
+                });
+      } catch (ExecutionException e) {
+        throw new CertificateVerificationException(e);
+      }
+    } else {
+      status = getOCSPResponseDirect(peerCert, issuerCert);
+    }
 
-		// Gets the DER-encoded OCTET string for the extension value for Authority
-		// information access Points
-		byte[] aiaExtensionValue = cert.getExtensionValue(Extension.authorityInfoAccess.getId());
-		if (aiaExtensionValue == null) {
-			throw new CertificateVerificationException("Certificate doesn't have authority information access points");
-		}
+    return status;
+  }
 
-		ASN1InputStream asn1In = null;
-		try {
-			asn1In = new ASN1InputStream(new ByteArrayInputStream(aiaExtensionValue));
+  /**
+   * Authority Information Access (AIA) is a non-critical extension in an X509 Certificate. This
+   * contains the URL of the OCSP endpoint if one is available. TODO: This might contain non OCSP
+   * urls as well. Handle this.
+   *
+   * @param cert is the certificate
+   * @return a lit of URLs in AIA extension of the certificate which will hopefully contain an OCSP
+   *     endpoint.
+   * @throws CertificateVerificationException
+   */
+  private List<String> getAIALocations(X509Certificate cert)
+      throws CertificateVerificationException {
 
-			DEROctetString aiaDEROctetString;
-			try {
-				aiaDEROctetString = (DEROctetString) (asn1In.readObject());
-			} catch (IOException e) {
-				throw new CertificateVerificationException("Unable to read AIA extensions.\n" + e);
-			}
+    // Gets the DER-encoded OCTET string for the extension value for Authority
+    // information access Points
+    byte[] aiaExtensionValue = cert.getExtensionValue(Extension.authorityInfoAccess.getId());
+    if (aiaExtensionValue == null) {
+      throw new CertificateVerificationException(
+          "Certificate doesn't have authority information access points");
+    }
 
-			AuthorityInformationAccess authorityInformationAccess = null;
+    ASN1InputStream asn1In = null;
+    try {
+      asn1In = new ASN1InputStream(new ByteArrayInputStream(aiaExtensionValue));
 
-			try (ASN1InputStream asn1InOctets = new ASN1InputStream(aiaDEROctetString.getOctets())) {
-				ASN1Sequence aiaASN1Sequence = (ASN1Sequence) asn1InOctets.readObject();
-				authorityInformationAccess = AuthorityInformationAccess.getInstance(aiaASN1Sequence);
-			} catch (IOException e) {
-				throw new CertificateVerificationException("Unable to read AIA extensions.\n" + e);
-			}
+      DEROctetString aiaDEROctetString;
+      try {
+        aiaDEROctetString = (DEROctetString) (asn1In.readObject());
+      } catch (IOException e) {
+        throw new CertificateVerificationException("Unable to read AIA extensions.\n" + e);
+      }
 
-			List<String> ocspUrlList = new ArrayList<String>();
-			AccessDescription[] accessDescriptions = authorityInformationAccess.getAccessDescriptions();
-			for (AccessDescription accessDescription : accessDescriptions) {
-				GeneralName gn = accessDescription.getAccessLocation();
-				if (gn.getTagNo() == GeneralName.uniformResourceIdentifier) {
-					DERIA5String str = DERIA5String.getInstance(gn.getName());
-					String accessLocation = str.getString();
-					ocspUrlList.add(accessLocation);
-				}
-			}
-			if (ocspUrlList.isEmpty()) {
-				throw new CertificateVerificationException("Cant get OCSP urls from certificate");
-			}
+      AuthorityInformationAccess authorityInformationAccess = null;
 
-			return ocspUrlList;
-		} finally {
-			if (asn1In != null) {
-				try {
-					asn1In.close();
-				} catch (IOException e) {
-				}
-			}
-		}
-	}
+      try (ASN1InputStream asn1InOctets = new ASN1InputStream(aiaDEROctetString.getOctets())) {
+        ASN1Sequence aiaASN1Sequence = (ASN1Sequence) asn1InOctets.readObject();
+        authorityInformationAccess = AuthorityInformationAccess.getInstance(aiaASN1Sequence);
+      } catch (IOException e) {
+        throw new CertificateVerificationException("Unable to read AIA extensions.\n" + e);
+      }
+
+      List<String> ocspUrlList = new ArrayList<String>();
+      AccessDescription[] accessDescriptions = authorityInformationAccess.getAccessDescriptions();
+      for (AccessDescription accessDescription : accessDescriptions) {
+        GeneralName gn = accessDescription.getAccessLocation();
+        if (gn.getTagNo() == GeneralName.uniformResourceIdentifier) {
+          DERIA5String str = DERIA5String.getInstance(gn.getName());
+          String accessLocation = str.getString();
+          ocspUrlList.add(accessLocation);
+        }
+      }
+      if (ocspUrlList.isEmpty()) {
+        throw new CertificateVerificationException("Cant get OCSP urls from certificate");
+      }
+
+      return ocspUrlList;
+    } finally {
+      if (asn1In != null) {
+        try {
+          asn1In.close();
+        } catch (IOException e) {
+        }
+      }
+    }
+  }
 }
