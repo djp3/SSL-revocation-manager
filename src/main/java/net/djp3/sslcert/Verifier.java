@@ -155,6 +155,7 @@ public abstract class Verifier<K extends Serializable, V extends Serializable> {
     if (config.useCache && (getCache() != null)) {
       if (validityCheckerHandle != null) {
         validityCheckerHandle.cancel(false);
+        scheduler.shutdownNow();
       }
       if (config.storeCacheToColdStorageOnQuit && (config.storeCacheColdStorageFileName != null)) {
         saveCache();

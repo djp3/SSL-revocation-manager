@@ -1,9 +1,5 @@
 
-public class Main {
-
-  public Main() {
-    // TODO Auto-generated constructor stub
-  }
+public class SSLMainDemo {
 
   public static void main(String[] args) {
     System.out.println("Hello world");
