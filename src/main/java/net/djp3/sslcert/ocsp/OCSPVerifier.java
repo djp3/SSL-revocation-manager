@@ -45,9 +45,10 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.asn1.ASN1IA5String;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERIA5String;
+import org.bouncycastle.asn1.ASN1String;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AccessDescription;
@@ -381,7 +382,8 @@ public class OCSPVerifier extends Verifier<BigInteger, VerificationStatus> {
       for (AccessDescription accessDescription : accessDescriptions) {
         GeneralName gn = accessDescription.getAccessLocation();
         if (gn.getTagNo() == GeneralName.uniformResourceIdentifier) {
-          DERIA5String str = DERIA5String.getInstance(gn.getName());
+          ASN1String str = ASN1IA5String.getInstance(gn.getName());
+          //DERIA5String str = DERIA5String.getInstance(gn.getName());
           String accessLocation = str.getString();
           ocspUrlList.add(accessLocation);
         }
