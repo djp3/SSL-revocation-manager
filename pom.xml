@@ -22,7 +22,7 @@
 		<maven-dependency-plugin.version>3.4.0</maven-dependency-plugin.version>
 		<maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
 		<os-maven-plugin.version>1.7.1</os-maven-plugin.version>
-		<protobuf.version>4.0.0-rc-2</protobuf.version>
+		<protobuf.version>4.27.2</protobuf.version>
 	</properties>
 	<build>
 		<extensions>
