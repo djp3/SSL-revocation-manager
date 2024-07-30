@@ -147,51 +147,45 @@ public class CTVerifier extends Verifier<BigInteger, VerificationStatus> {
     }
   }
 
-  /**
-   * This is run periodically by the cache to clean out any cache entries that have expired: Not
-   * according to cache semantics but by virtue of the information associated with the revocation
-   * data.
-   */
-  protected Runnable getValidityCheckerCode() {
-    return new Runnable() {
-      @Override
-      public void run() {
-        Cache<BigInteger, VerificationStatus> cache = getCache();
-        if (config.useCache && (cache != null)) {
-          StringBuffer info = new StringBuffer();
-          info.append("\nRunning validity check on CT Cache\n");
-          CacheStats stats = cache.stats();
-          info.append(
-              ""
-                  + "\t            Pre Size: "
-                  + cache.size()
-                  + "\n"
-                  + "\tAverage Load Penalty: "
-                  + stats.averageLoadPenalty()
-                  + "\n"
-                  + "\t            Hit Rate: "
-                  + stats.hitRate()
-                  + "\n"
-                  + "\tLoad Exception Count: "
-                  + stats.loadExceptionCount()
-                  + "\n"
-                  + "\t       Request Count: "
-                  + stats.requestCount()
-                  + "\n");
-          Date now = new Date();
-          for (Entry<BigInteger, VerificationStatus> x : cache.asMap().entrySet()) {
-            VerificationStatus resp = x.getValue();
-            Date nextUpdate = resp.getNextUpdate();
-            if ((nextUpdate == null) || (nextUpdate.before(now))) {
-              cache.invalidate(x.getKey());
-            }
-          }
-          info.append("\t           Post Size: " + cache.size());
-          getLog().debug(info.toString());
-        }
-      }
-    };
-  }
+	/**
+	 * This is run periodically by the cache to clean out any cache entries that have expired: Not according to cache
+	 * semantics but by virtue of the information associated with the revocation data.
+	 */
+	protected Runnable getValidityCheckerCode() {
+		return new Runnable() {
+			@Override
+			public void run() {
+				Cache<BigInteger, VerificationStatus> cache = getCache();
+				if (config.useCache && (cache != null)) {
+					StringBuffer info = new StringBuffer();
+					info.append("\nRunning validity check on CT Cache");
+					CacheStats stats = cache.stats();
+					long presize = cache.size();
+					String chunk = "" 
+							+ "\tAverage Load Penalty: "
+							+ stats.averageLoadPenalty()
+							+ "\t            Hit Rate: "
+							+ stats.hitRate() 
+							+ "\tLoad Exception Count: "
+							+ stats.loadExceptionCount() 
+							+ "\t       Request Count: " 
+							+ stats.requestCount() 
+							+ "\n";
+					Date now = new Date();
+					for (Entry<BigInteger, VerificationStatus> x : cache.asMap().entrySet()) {
+						VerificationStatus resp = x.getValue();
+						Date nextUpdate = resp.getNextUpdate();
+						if ((nextUpdate == null) || (nextUpdate.before(now))) {
+							cache.invalidate(x.getKey());
+						}
+					}
+					info.append("\tPre Size: " + presize + "\tPost Size: " + cache.size());
+					info.append(chunk);
+					getLog().debug(info.toString());
+				}
+			}
+		};
+	}
 
   private VerificationStatus getCTValidationDirect(
       X509Certificate certificate, X509Certificate[] chain)

@@ -96,45 +96,45 @@ public class OCSPVerifier extends Verifier<BigInteger, VerificationStatus> {
     super(config);
   }
 
-  /**
-   * This is run periodically by the cache to clean out any cache entries that have expired: Not
-   * according to cache semantics but by virtue of the information associated with the revocation
-   * data.
-   */
-  protected Runnable getValidityCheckerCode() {
-    return new Runnable() {
-      @Override
-      public void run() {
-        Cache<BigInteger, VerificationStatus> cache = getCache();
-        if (config.useCache && (cache != null)) {
-          getLog().debug("Running validity check on OCSP Cache");
-          CacheStats stats = cache.stats();
-          getLog()
-              .debug(
-                  "OCSP Cache stats:\n"
-                      + "\tAverage Load Penalty: "
-                      + stats.averageLoadPenalty()
-                      + "\n"
-                      + "\t            Hit Rate: "
-                      + stats.hitRate()
-                      + "\n"
-                      + "\tLoad Exception Count: "
-                      + stats.loadExceptionCount()
-                      + "\n"
-                      + "\t       Request Count: "
-                      + stats.requestCount());
-          Date now = new Date();
-          for (Entry<BigInteger, VerificationStatus> x : cache.asMap().entrySet()) {
-            VerificationStatus resp = x.getValue();
-            Date nextUpdate = resp.getNextUpdate();
-            if ((nextUpdate == null) || (nextUpdate.before(now))) {
-              cache.invalidate(x.getKey());
-            }
-          }
-        }
-      }
-    };
-  }
+	/**
+	 * This is run periodically by the cache to clean out any cache entries that have expired: Not according to cache
+	 * semantics but by virtue of the information associated with the revocation data.
+	 */
+	protected Runnable getValidityCheckerCode() {
+		return new Runnable() {
+			@Override
+			public void run() {
+				Cache<BigInteger, VerificationStatus> cache = getCache();
+				if (config.useCache && (cache != null)) {
+					StringBuffer info = new StringBuffer();
+					info.append("\nRunning validity check on OCSP Cache");
+					CacheStats stats = cache.stats();
+					long presize = cache.size();
+					String chunk = "" 
+							+ "\tAverage Load Penalty: " 
+							+ stats.averageLoadPenalty()
+							+ "\t            Hit Rate: " 
+							+ stats.hitRate() 
+							+ "\tLoad Exception Count: "
+							+ stats.loadExceptionCount() 
+							+ "\t       Request Count: " 
+							+ stats.requestCount() 
+							+ "\n";
+					Date now = new Date();
+					for (Entry<BigInteger, VerificationStatus> x : cache.asMap().entrySet()) {
+						VerificationStatus resp = x.getValue();
+						Date nextUpdate = resp.getNextUpdate();
+						if ((nextUpdate == null) || (nextUpdate.before(now))) {
+							cache.invalidate(x.getKey());
+						}
+					}
+					info.append("\tPre Size: " + presize + "\tPost Size: " + cache.size());
+					info.append(chunk);
+					getLog().debug(info.toString());
+				}
+			}
+		};
+	}
 
   /**
    * This method generates an OCSP Request to be sent to an OCSP endpoint.

@@ -1,5 +1,5 @@
 /*
-	Copyright 2007-2018
+	Copyright 2007-2024
 		Donald J. Patterson
 */
 /*
@@ -96,49 +96,49 @@ public class CRLVerifier extends Verifier<String, X509CRLWrapper> {
     super(config);
   }
 
-  /**
-   * This is run periodically by the cache to clean out any cache entries that have expired: Not
-   * according to cache semantics but by virtue of the information associated with the revocation
-   * data.
-   */
-  protected Runnable getValidityCheckerCode() {
-    return new Runnable() {
-      @Override
-      public void run() {
-        Cache<String, X509CRLWrapper> cache = getCache();
-        if (config.useCache && (cache != null)) {
-          getLog().debug("Running validity check on CRL Cache");
-          CacheStats stats = cache.stats();
-          getLog()
-              .debug(
-                  "OCSP Cache stats:\n"
-                      + "\tAverage Load Penalty: "
-                      + stats.averageLoadPenalty()
-                      + "\n"
-                      + "\t            Hit Rate: "
-                      + stats.hitRate()
-                      + "\n"
-                      + "\tLoad Exception Count: "
-                      + stats.loadExceptionCount()
-                      + "\n"
-                      + "\t       Request Count: "
-                      + stats.requestCount());
-          Date now = new Date();
-          for (Entry<String, X509CRLWrapper> x : cache.asMap().entrySet()) {
-            X509CRL resp = x.getValue().getX509CRL();
-            if (resp == null) {
-              cache.invalidate(x.getKey());
-            } else {
-              Date nextUpdate = resp.getNextUpdate();
-              if ((nextUpdate == null) || (nextUpdate.before(now))) {
-                cache.invalidate(x.getKey());
-              }
-            }
-          }
-        }
-      }
-    };
-  }
+	/**
+	 * This is run periodically by the cache to clean out any cache entries that have expired: Not according to cache
+	 * semantics but by virtue of the information associated with the revocation data.
+	 */
+	protected Runnable getValidityCheckerCode() {
+		return new Runnable() {
+			@Override
+			public void run() {
+				Cache<String, X509CRLWrapper> cache = getCache();
+				if (config.useCache && (cache != null)) {
+					StringBuffer info = new StringBuffer();
+					info.append("\nRunning validity check on CRL Cache");
+					CacheStats stats = cache.stats();
+					long presize = cache.size();
+					String chunk = "" 
+							+ "\tAverage Load Penalty: "
+							+ stats.averageLoadPenalty()
+							+ "\t            Hit Rate: "
+							+ stats.hitRate() 
+							+ "\tLoad Exception Count: "
+							+ stats.loadExceptionCount() 
+							+ "\t       Request Count: " 
+							+ stats.requestCount() 
+							+ "\n";
+					Date now = new Date();
+					for (Entry<String, X509CRLWrapper> x : cache.asMap().entrySet()) {
+						X509CRL resp = x.getValue().getX509CRL();
+						if (resp == null) {
+							cache.invalidate(x.getKey());
+						} else {
+							Date nextUpdate = resp.getNextUpdate();
+							if ((nextUpdate == null) || (nextUpdate.before(now))) {
+								cache.invalidate(x.getKey());
+							}
+						}
+					}
+					info.append("\tPre Size: " + presize + "\tPost Size: " + cache.size());
+					info.append(chunk);
+					getLog().debug(info.toString());
+				}
+			}
+		};
+	}
 
   /**
    * Checks revocation status (Good, Revoked) of the peer certificate.
@@ -182,7 +182,7 @@ public class CRLVerifier extends Verifier<String, X509CRLWrapper> {
                 "Either the url is bad or cannot build X509CRL. Check with the next url in the list.",
                 e);
       }
-      if (x509CRLWrapper.getX509CRL() != null) {
+      if (x509CRLWrapper != null && x509CRLWrapper.getX509CRL() != null) {
         return getRevocationStatus(x509CRLWrapper.getX509CRL(), peerCert, fullChain);
       }
     }
