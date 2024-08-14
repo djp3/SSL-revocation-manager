@@ -22,7 +22,6 @@
 		<maven-dependency-plugin.version>3.4.0</maven-dependency-plugin.version>
 		<maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
 		<os-maven-plugin.version>1.7.1</os-maven-plugin.version>
-		<protobuf.version>4.27.3</protobuf.version>
 	</properties>
 	<build>
 		<extensions>
@@ -190,37 +189,10 @@
 			<version>4.8.6</version>
 		</dependency>
 		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>33.2.1-jre</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java -->
-		<dependency>
-			<groupId>com.google.protobuf</groupId>
-			<artifactId>protobuf-java</artifactId>
-			<version>${protobuf.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.13.2</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>net.minidev</groupId>
-			<artifactId>json-smart</artifactId>
-			<version>2.5.1</version>
-		</dependency>
-		<!-- HttpPost for example -->
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.14</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpcore</artifactId>
-			<version>4.4.16</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -232,13 +204,6 @@
 			<artifactId>log4j-api</artifactId>
 			<version>2.23.1</version>
 		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>2.0.16</version>
-		</dependency>
 		<!--
 		https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl -->
 		<dependency>
@@ -246,13 +211,17 @@
 			<artifactId>log4j-slf4j-impl</artifactId>
 			<version>2.23.1</version>
 		</dependency>
-		<!-- lmax Needed for log4j among other things -->
+		<!-- lmax used by  log4j among other things -->
 		<dependency>
 			<groupId>com.lmax</groupId>
 			<artifactId>disruptor</artifactId>
 			<version>4.0.0</version>
 		</dependency>
-		<!-- All the crypto and 509 certificate support -->	
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-ext-jdk18on</artifactId>
+			<version>1.78</version>
+		</dependency>
 		<dependency>
 			<!-- includes bcprov-jdk18on	-->
 			<!-- includes bcutil-jdk18on	-->
@@ -267,7 +236,33 @@
 			<artifactId>bcpkix-jdk18on</artifactId>
 			<version>1.78.1</version>
 		</dependency>
-		
+		<!-- LRU Cache for example -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>33.2.1-jre</version>
+		</dependency>
+		<dependency>
+			<groupId>net.minidev</groupId>
+			<artifactId>json-smart</artifactId>
+			<version>2.5.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>4.27.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.14</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>4.4.16</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.certificate-transparency</groupId>
 			<artifactId>ctlog</artifactId>
