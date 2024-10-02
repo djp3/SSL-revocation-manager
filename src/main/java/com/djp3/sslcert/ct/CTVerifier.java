@@ -19,7 +19,7 @@
     along with SSLRM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package net.djp3.sslcert.ct;
+package com.djp3.sslcert.ct;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -56,12 +56,11 @@ import org.certificatetransparency.ctlog.LogSignatureVerifier;
 import org.certificatetransparency.ctlog.proto.Ct;
 import org.certificatetransparency.ctlog.utils.VerifySignature;
 
+import com.djp3.sslcert.CertificateVerificationException;
+import com.djp3.sslcert.VerificationStatus;
+import com.djp3.sslcert.Verifier;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheStats;
-
-import net.djp3.sslcert.CertificateVerificationException;
-import net.djp3.sslcert.VerificationStatus;
-import net.djp3.sslcert.Verifier;
 
 /**
  * This is used to check if an SSL connection has a known good server side certificate that can be

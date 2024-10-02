@@ -19,7 +19,7 @@
     along with SSLRM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package net.djp3.sslcert.ocsp;
+package com.djp3.sslcert.ocsp;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
@@ -69,12 +69,11 @@ import org.bouncycastle.operator.DigestCalculatorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 
+import com.djp3.sslcert.CertificateVerificationException;
+import com.djp3.sslcert.VerificationStatus;
+import com.djp3.sslcert.Verifier;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheStats;
-
-import net.djp3.sslcert.CertificateVerificationException;
-import net.djp3.sslcert.VerificationStatus;
-import net.djp3.sslcert.Verifier;
 
 /**
  * This is used to check if an SSL Certificate is revoked or not by using its CA using the Online

@@ -19,7 +19,7 @@
     along with SSLRM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package net.djp3.sslcert.crl;
+package com.djp3.sslcert.crl;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -52,12 +52,11 @@ import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 
+import com.djp3.sslcert.CertificateVerificationException;
+import com.djp3.sslcert.VerificationStatus;
+import com.djp3.sslcert.Verifier;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheStats;
-
-import net.djp3.sslcert.CertificateVerificationException;
-import net.djp3.sslcert.VerificationStatus;
-import net.djp3.sslcert.Verifier;
 
 /**
  * This is used to check if an SSL Certificate is revoked or not by using the Certificate Revocation

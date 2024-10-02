@@ -19,7 +19,7 @@
     along with SSLRM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package net.djp3.sslcert.crl;
+package com.djp3.sslcert.crl;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -30,7 +30,7 @@ import java.io.Serializable;
 import java.security.cert.CRLException;
 import java.security.cert.X509CRL;
 
-import net.djp3.sslcert.CertificateVerificationException;
+import com.djp3.sslcert.CertificateVerificationException;
 
 public class X509CRLWrapper implements Serializable {
 

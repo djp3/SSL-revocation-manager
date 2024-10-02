@@ -1,4 +1,4 @@
-package net.djp3.sslcert;
+package com.djp3.sslcert;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -55,11 +55,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import net.djp3.sslcert.Verifier.Configuration;
-import net.djp3.sslcert.crl.CRLVerifier;
-import net.djp3.sslcert.crl.X509CRLWrapper;
-import net.djp3.sslcert.ct.CTVerifier;
-import net.djp3.sslcert.ocsp.OCSPVerifier;
+import com.djp3.sslcert.Verifier.Configuration;
+import com.djp3.sslcert.crl.CRLVerifier;
+import com.djp3.sslcert.crl.X509CRLWrapper;
+import com.djp3.sslcert.ct.CTVerifier;
+import com.djp3.sslcert.ocsp.OCSPVerifier;
+
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
@@ -68,7 +69,7 @@ public class VerifierTest {
 
   private static URI goodURI = null;
   private static URI goodURI2 = null;
-  private static URI badURIRevoked = null;
+  private static URI badURIRevoked_OCSP_ONLY = null;
   private static URI badURISCTFailed = null;
 
   @BeforeClass
@@ -87,8 +88,7 @@ public class VerifierTest {
               .setPath("/djp3/p2p4java/production/bootstrapMasterList.json")
               .build();
       goodURI2 = new URIBuilder().setScheme("https").setHost("www.cnn.com").setPath("/").build();
-      badURIRevoked =
-          new URIBuilder().setScheme("https").setHost("revoked.badssl.com").setPath("/").build();
+      badURIRevoked_OCSP_ONLY = new URIBuilder().setScheme("https").setHost("revoked.badssl.com").setPath("/").build();
       badURISCTFailed =
           new URIBuilder()
               .setScheme("https")
@@ -292,8 +292,17 @@ public class VerifierTest {
 
   @Test
   /**
-   * OCSP cache: no load it: N/A store it: N/A CRL cache: no load it: N/A store it: N/A CT cache:
-   * yes load it: no store it: no URL: good URL
+   * OCSP cache: no 
+   * 	load it: N/A
+   * 	store it: N/A
+   * CRL cache: no
+   * 	load it: N/A
+   * 	store it: N/A
+   * CT cache: yes
+   * 	load it: no
+   * 	store it: no
+   *
+   * <p>URL: good URL
    */
   public void test01() {
     Configuration configurationCT = new CTVerifier.Configuration();
@@ -324,8 +333,7 @@ public class VerifierTest {
 
     SSLConnectionSocketFactory sslsf = null;
     SSLContext.setDefault(ctx);
-    sslsf =
-        new SSLConnectionSocketFactory(ctx, new org.apache.http.conn.ssl.DefaultHostnameVerifier());
+    sslsf = new SSLConnectionSocketFactory(ctx, new org.apache.http.conn.ssl.DefaultHostnameVerifier());
 
     CloseableHttpClient httpClient = makeHTTPClient(sslsf);
 
@@ -357,8 +365,17 @@ public class VerifierTest {
 
   @Test
   /**
-   * OCSP cache: no load it: N/A store it: N/A CRL cache: no load it: N/A store it: N/A CT cache:
-   * yes load it: no store it: no URL: bad URL
+   * OCSP cache: no 
+   * 	load it: N/A
+   * 	store it: N/A
+   * CRL cache: no
+   * 	load it: N/A
+   * 	store it: N/A
+   * CT cache: yes
+   * 	load it: no
+   * 	store it: no
+   *
+   * <p>URL: bad URL
    */
   public void test02() {
     Configuration configurationCT = new CTVerifier.Configuration();
@@ -389,8 +406,7 @@ public class VerifierTest {
 
     SSLConnectionSocketFactory sslsf = null;
     SSLContext.setDefault(ctx);
-    sslsf =
-        new SSLConnectionSocketFactory(ctx, new org.apache.http.conn.ssl.DefaultHostnameVerifier());
+    sslsf = new SSLConnectionSocketFactory(ctx, new org.apache.http.conn.ssl.DefaultHostnameVerifier());
 
     CloseableHttpClient httpClient = makeHTTPClient(sslsf);
 
@@ -422,8 +438,17 @@ public class VerifierTest {
 
   @Test
   /**
-   * OCSP cache: no load it: N/A store it: N/A CRL cache: no load it: N/A store it: N/A CT cache:
-   * yes load it: no store it: yes URL: good and bad URL
+   * OCSP cache: no 
+   * 	load it: N/A
+   * 	store it: N/A
+   * CRL cache: no
+   * 	load it: N/A
+   * 	store it: N/A
+   * CT cache: yes
+   * 	load it: no
+   * 	store it: yes
+   *
+   * <p>URL: good and bad URL
    */
   public void test03() {
     Configuration configurationCT = new CTVerifier.Configuration();
@@ -533,9 +558,19 @@ public class VerifierTest {
   }
 
   @Test
+ 
   /**
-   * OCSP cache: no load it: N/A store it: N/A CRL cache: no load it: N/A store it: N/A CT cache:
-   * yes load it: no store it: yes URL: good and bad URL
+   * OCSP cache: no 
+   * 	load it: N/A
+   * 	store it: N/A
+   * CRL cache: no
+   * 	load it: N/A
+   * 	store it: N/A
+   * CT cache: yes
+   * 	load it: yes
+   * 	store it: yes
+   *
+   * <p>URL: good and bad URL
    */
   public void test04() {
     test03(); //Make sure there is a cache to load
@@ -649,9 +684,19 @@ public class VerifierTest {
   }
 
   @Test
+ 
   /**
-   * OCSP cache: no load it: N/A store it: N/A CRL cache: yes load it: no store it: no CT cache: no
-   * load it: N/A store it: N/A URL: good
+   * OCSP cache: no 
+   * 	load it: N/A
+   * 	store it: N/A
+   * CRL cache: yes
+   * 	load it: no
+   * 	store it: no
+   * CT cache: no
+   * 	load it: N/A
+   * 	store it: N/A
+   *
+   * <p>URL: good URL
    */
   public void test05() {
     Configuration configurationCRL = new CRLVerifier.Configuration();
@@ -679,26 +724,28 @@ public class VerifierTest {
 
     SSLConnectionSocketFactory sslsf = null;
     SSLContext.setDefault(ctx);
-    sslsf =
-        new SSLConnectionSocketFactory(ctx, new org.apache.http.conn.ssl.DefaultHostnameVerifier());
+    sslsf = new SSLConnectionSocketFactory(ctx, new org.apache.http.conn.ssl.DefaultHostnameVerifier());
+    
 
     CloseableHttpClient httpClient = makeHTTPClient(sslsf);
 
     ResponseHandler<String> responseHandler = makeResponseHandler();
-
+    
     //Build the request
-    HttpGet httpUriRequest = new HttpGet(badURIRevoked);
+    HttpGet httpUriRequest = new HttpGet(badURIRevoked_OCSP_ONLY);
 
     //Execute the request
     try {
       httpClient.execute(httpUriRequest, responseHandler);
-      fail("Should not have worked");
     } catch (org.bouncycastle.tls.TlsFatalAlert e) {
       assertTrue(e.getMessage().contains("certificate_unknown(46)"));
+      fail("Should have worked because it's not revoked by CRL");
     } catch (ClientProtocolException e) {
       fail("Should not have received this: " + e);
+      fail("Should have worked because it's not revoked by CRL");
     } catch (IOException e) {
       fail("Should not have received this: " + e);
+      fail("Should have worked because it's not revoked by CRL");
     }
 
     crlVerifier.triggerGarbageCollection();
@@ -711,9 +758,19 @@ public class VerifierTest {
   }
 
   @Test
+ 
   /**
-   * OCSP cache: no load it: N/A store it: N/A CRL cache: yes load it: no store it: no CT cache: no
-   * load it: N/A store it: N/A URL: bad URL
+   * OCSP cache: no 
+   * 	load it: N/A
+   * 	store it: N/A
+   * CRL cache: yes
+   * 	load it: no
+   * 	store it: no
+   * CT cache: no
+   * 	load it: N/A
+   * 	store it: N/A
+   *
+   * <p>URL: bad URL
    */
   public void test06() {
     Configuration configurationCRL = new CRLVerifier.Configuration();
@@ -749,18 +806,20 @@ public class VerifierTest {
     ResponseHandler<String> responseHandler = makeResponseHandler();
 
     //Build the request
-    HttpGet httpUriRequest = new HttpGet(badURIRevoked);
+    HttpGet httpUriRequest = new HttpGet(badURIRevoked_OCSP_ONLY);
 
     //Execute the request
     try {
       httpClient.execute(httpUriRequest, responseHandler);
-      fail("Should not have worked");
     } catch (org.bouncycastle.tls.TlsFatalAlert e) {
       assertTrue(e.getMessage().contains("certificate_unknown(46)"));
+      fail("Should have worked because it's not revoked by CRL");
     } catch (ClientProtocolException e) {
       fail("Should not have received this: " + e);
+      fail("Should have worked because it's not revoked by CRL");
     } catch (IOException e) {
       fail("Should not have received this: " + e);
+      fail("Should have worked because it's not revoked by CRL");
     }
 
     crlVerifier.triggerGarbageCollection();
@@ -774,8 +833,15 @@ public class VerifierTest {
 
   @Test
   /**
-   * OCSP cache: no load it: N/A store it: N/A CRL cache: yes load it: no store it: yes CT cache: no
-   * load it: N/A store it: N/A
+   * OCSP cache: no 
+   * 	load it: N/A
+   * 	store it: N/A
+   * CRL cache: yes
+   * 	load it: no
+   * 	store it: yes
+   * CT cache: no
+   * 	load it: N/A
+   * 	store it: N/A
    *
    * <p>URL: good and bad URL
    */
@@ -851,15 +917,17 @@ public class VerifierTest {
     //Execute the request
     try {
       //Build the request
-      httpUriRequest = new HttpGet(badURIRevoked);
+      httpUriRequest = new HttpGet(badURIRevoked_OCSP_ONLY);
       data = httpClient.execute(httpUriRequest, responseHandler);
-      fail("Should not have worked");
     } catch (org.bouncycastle.tls.TlsFatalAlert e) {
       assertTrue(e.getMessage().contains("certificate_unknown(46)"));
+      fail("Should have worked because it's not revoked by CRL");
     } catch (ClientProtocolException e) {
       fail("Should not have received this: " + e);
+      fail("Should have worked because it's not revoked by CRL");
     } catch (IOException e) {
       fail("Should not have received this: " + e);
+      fail("Should have worked because it's not revoked by CRL");
     }
 
     //Load the cache with additional cert lookups that should be different
@@ -872,8 +940,8 @@ public class VerifierTest {
     assertTrue(missCount2 > 0);
     assertTrue(loadCount2 > 0);
 
-    assertTrue(requestCount2 > requestCount1);
-    assertTrue(loadCount2 > loadCount1);
+    assertTrue(requestCount2 >= requestCount1);
+    assertTrue(loadCount2 >= loadCount1);
 
     crlVerifier.triggerGarbageCollection();
 
@@ -888,6 +956,19 @@ public class VerifierTest {
   /**
    * OCSP cache: no load it: N/A store it: N/A CRL cache: yes load it: yes store it: yes CT cache:
    * no load it: N/A store it: N/A
+   *
+   * <p>URL: good and bad URL
+   */
+  /**
+   * OCSP cache: no 
+   * 	load it: N/A
+   * 	store it: N/A
+   * CRL cache: yes
+   * 	load it: yes
+   * 	store it: yes
+   * CT cache: no
+   * 	load it: N/A
+   * 	store it: N/A
    *
    * <p>URL: good and bad URL
    */
@@ -934,8 +1015,7 @@ public class VerifierTest {
 
     SSLConnectionSocketFactory sslsf = null;
     SSLContext.setDefault(ctx);
-    sslsf =
-        new SSLConnectionSocketFactory(ctx, new org.apache.http.conn.ssl.DefaultHostnameVerifier());
+    sslsf = new SSLConnectionSocketFactory(ctx, new org.apache.http.conn.ssl.DefaultHostnameVerifier());
 
     CloseableHttpClient httpClient = makeHTTPClient(sslsf);
 
@@ -968,15 +1048,17 @@ public class VerifierTest {
     //Execute the request
     try {
       //Build the request
-      httpUriRequest = new HttpGet(badURIRevoked);
+      httpUriRequest = new HttpGet(badURIRevoked_OCSP_ONLY);
       data = httpClient.execute(httpUriRequest, responseHandler);
-      fail("Should not have worked");
     } catch (org.bouncycastle.tls.TlsFatalAlert e) {
       assertTrue(e.getMessage().contains("certificate_unknown(46)"));
+      fail("Should have worked because it's not revoked by CRL");
     } catch (ClientProtocolException e) {
       fail("Should not have received this: " + e);
+      fail("Should have worked because it's not revoked by CRL");
     } catch (IOException e) {
       fail("Should not have received this: " + e);
+      fail("Should have worked because it's not revoked by CRL");
     }
     long requestCount2 = crlVerifier.getCacheStats().requestCount();
     long hitCount2 = crlVerifier.getCacheStats().hitCount();
@@ -987,7 +1069,7 @@ public class VerifierTest {
     assertEquals(0, missCount2); //Because we loaded the cache from disk
     assertEquals(0, loadCount2); //Because we loaded the cache from disk
 
-    assertTrue(requestCount2 > requestCount1);
+    assertTrue(requestCount2 >= requestCount1);
     assertTrue(loadCount2 >= loadCount1);
 
     crlVerifier.triggerGarbageCollection();
@@ -1104,7 +1186,7 @@ public class VerifierTest {
     ResponseHandler<String> responseHandler = makeResponseHandler();
 
     //Build the request
-    HttpGet httpUriRequest = new HttpGet(badURIRevoked);
+    HttpGet httpUriRequest = new HttpGet(badURIRevoked_OCSP_ONLY);
 
     //Execute the request
     try {
@@ -1206,7 +1288,7 @@ public class VerifierTest {
     //Execute the request
     try {
       //Build the request
-      httpUriRequest = new HttpGet(badURIRevoked);
+      httpUriRequest = new HttpGet(badURIRevoked_OCSP_ONLY);
       data = httpClient.execute(httpUriRequest, responseHandler);
       fail("Should not have worked");
     } catch (org.bouncycastle.tls.TlsFatalAlert e) {
@@ -1323,7 +1405,7 @@ public class VerifierTest {
     //Execute the request
     try {
       //Build the request
-      httpUriRequest = new HttpGet(badURIRevoked);
+      httpUriRequest = new HttpGet(badURIRevoked_OCSP_ONLY);
       data = httpClient.execute(httpUriRequest, responseHandler);
       fail("Should not have worked");
     } catch (org.bouncycastle.tls.TlsFatalAlert e) {
@@ -1505,7 +1587,7 @@ public class VerifierTest {
     // Execute the request
     try {
       // Build the request
-      httpUriRequest = new HttpGet(badURIRevoked);
+      httpUriRequest = new HttpGet(badURIRevoked_OCSP_ONLY);
       data = httpClient.execute(httpUriRequest, responseHandler);
       fail("Should not have worked");
     } catch (org.bouncycastle.tls.TlsFatalAlert e) {

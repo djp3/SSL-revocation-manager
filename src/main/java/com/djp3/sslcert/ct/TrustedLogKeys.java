@@ -19,7 +19,7 @@
     along with SSLRM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package net.djp3.sslcert.ct;
+package com.djp3.sslcert.ct;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -19,7 +19,7 @@
     along with SSLRM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package net.djp3.sslcert;
+package com.djp3.sslcert;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
