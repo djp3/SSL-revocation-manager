@@ -22,7 +22,13 @@
 		<maven-dependency-plugin.version>3.4.0</maven-dependency-plugin.version>
 		<maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
 		<os-maven-plugin.version>1.7.1</os-maven-plugin.version>
-		<jvm.args>-Dfile.encoding=UTF-8 -Duser.timezone=UTC --add-opens java.base/java.lang=ALL-UNNAMED --add-modules=ALL-DEFAULT</jvm.args>
+		<jvm.args>
+			-Dfile.encoding=UTF-8
+			-Duser.timezone=UTC
+			--add-opens java.base/java.lang=ALL-UNNAMED
+			--add-modules=ALL-MODULE-PATH
+			-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
+		</jvm.args>
 	</properties>
 	<build>
 		<extensions>
