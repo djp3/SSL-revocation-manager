@@ -27,3 +27,7 @@ logs
 CRL.cache
 CT.cache
 OCSP.cache
+.settings
+src/test/resources/keystore
+.classpath
+.project
