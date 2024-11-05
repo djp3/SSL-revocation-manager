@@ -269,7 +269,7 @@
 			<!-- includes bcutil-jdk18on	-->
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpkix-jdk18on</artifactId>
-			<version>1.78.1</version>
+			<version>1.79</version>
 		</dependency>
 		<!-- LRU Cache for example -->
 		<dependency>
