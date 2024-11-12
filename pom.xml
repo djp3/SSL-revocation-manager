@@ -254,8 +254,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-ext-jdk18on</artifactId>
-			<version>1.78</version>
+			<artifactId>bcprov-jdk18on</artifactId>
+			<version>1.79</version>
 		</dependency>
 		<dependency>
 			<!-- includes bcprov-jdk18on	-->
