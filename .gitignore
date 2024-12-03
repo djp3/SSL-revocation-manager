@@ -31,3 +31,4 @@ OCSP.cache
 src/test/resources/keystore
 .classpath
 .project
+settings.xml

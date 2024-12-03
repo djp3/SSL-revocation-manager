@@ -16,12 +16,6 @@
 		<protobuf.input.directory>${project.basedir}/src/main/proto</protobuf.input.directory>
 		<protobuf.output.directory>${project.build.directory}/generated-sources</protobuf.output.directory>
 
-		<!-- library versions -->
-		<build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
-		<maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
-		<maven-dependency-plugin.version>3.4.0</maven-dependency-plugin.version>
-		<maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
-		<os-maven-plugin.version>1.7.1</os-maven-plugin.version>
 		<jvm.args>
 			-Dfile.encoding=UTF-8
 			-Duser.timezone=UTC
@@ -32,11 +26,10 @@
 	</properties>
 	<build>
 		<extensions>
-			<!-- Updated os-maven-plugin groupId and version -->
 			<extension>
 				<groupId>kr.motd.maven</groupId>
 				<artifactId>os-maven-plugin</artifactId>
-				<version>${os-maven-plugin.version}</version>
+				<version>1.7.1</version>
 			</extension>
 		</extensions>
 		<plugins>
@@ -54,7 +47,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<protocArtifact>com.google.protobuf:protoc:4.28.2:exe:${os.detected.classifier}</protocArtifact>
+					<protocArtifact>com.google.protobuf:protoc:4.29.0:exe:${os.detected.classifier}</protocArtifact>
 					<protoSourceRoot>${protobuf.input.directory}</protoSourceRoot>
 					<outputDirectory>${protobuf.output.directory}/protobuf/java</outputDirectory>
 				</configuration>
@@ -64,7 +57,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>${build-helper-maven-plugin.version}</version>
+				<version>3.6.0</version>
 				<executions>
 					<execution>
 						<phase>generate-sources</phase>
@@ -97,7 +90,7 @@
 			<!-- Updated maven-surefire-plugin version and configuration -->
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.5.0</version>
+				<version>3.5.1</version>
 				<configuration>
 					<argLine>${jvm.args}</argLine>
 					<forkCount>1</forkCount>
@@ -110,7 +103,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>${maven-shade-plugin.version}</version>
+				<version>3.6.0</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -147,6 +140,9 @@
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
 				<version>11.1.0</version>
+				<configuration>
+					<nvdApiKey>${dependency-check.nvd.api.key}</nvdApiKey>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
@@ -155,7 +151,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
@@ -193,7 +188,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 			<plugin>
 				<groupId>org.sonatype.plugins</groupId>
 				<artifactId>nexus-staging-maven-plugin</artifactId>
@@ -285,7 +279,7 @@
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
-			<version>4.28.3</version>
+			<version>4.29.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
