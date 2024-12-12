@@ -139,7 +139,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>11.1.0</version>
+				<version>11.1.1</version>
 				<configuration>
 					<nvdApiKey>${dependency-check.nvd.api.key}</nvdApiKey>
 				</configuration>
@@ -168,7 +168,7 @@
 			<!-- Existing plugins -->
 			<plugin>
 				<artifactId>maven-gpg-plugin</artifactId>
-				<version>1.6</version>
+				<version>3.2.7</version>
 				<executions>
 					<execution>
 						<id>sign-artifacts</id>
@@ -228,17 +228,17 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.24.1</version>
+			<version>2.24.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
-			<version>2.24.1</version>
+			<version>2.24.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j-impl</artifactId>
-			<version>2.24.1</version>
+			<version>2.24.2</version>
 		</dependency>
 		<!-- lmax used by  log4j among other things -->
 		<dependency>
