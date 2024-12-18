@@ -47,7 +47,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<protocArtifact>com.google.protobuf:protoc:4.29.0:exe:${os.detected.classifier}</protocArtifact>
+					<protocArtifact>com.google.protobuf:protoc:4.29.1:exe:${os.detected.classifier}</protocArtifact>
 					<protoSourceRoot>${protobuf.input.directory}</protoSourceRoot>
 					<outputDirectory>${protobuf.output.directory}/protobuf/java</outputDirectory>
 				</configuration>
@@ -279,7 +279,7 @@
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
-			<version>4.29.0</version>
+			<version>4.29.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
