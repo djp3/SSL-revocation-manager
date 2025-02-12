@@ -139,7 +139,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>11.1.1</version>
+				<version>12.0.2</version>
 				<configuration>
 					<nvdApiKey>${dependency-check.nvd.api.key}</nvdApiKey>
 				</configuration>
